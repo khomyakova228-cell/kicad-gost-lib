@@ -240,7 +240,7 @@ def sym_opa340():
     """ОУ OPA340P (DIP-8): ГОСТ 2.759 — основное поле с «▷∞», доп. поле входов слева,
     инверсный вход — кружком; выводы питания отдельной группой (ГОСТ 2.743)."""
     s = Symbol("OPA340P", "DA", "OPA340P",
-               footprint="Package_DIP:DIP-8_W7.62mm",
+               footprint="GOST_FP:DIP-8_W7.62mm",
                datasheet="https://www.ti.com/lit/ds/symlink/opa340.pdf",
                descr="ОУ rail-to-rail, однополярное питание 2,7…5,5 В, DIP-8",
                keywords="ОУ opamp rail-to-rail CMOS", mfr="Texas Instruments", mpn="OPA340PA")
@@ -284,7 +284,7 @@ def sym_opa340():
 
 def sym_kr590kn2():
     s = Symbol("KR590KN2", "DA", "КР590КН2",
-               footprint="Package_DIP:DIP-16_W7.62mm",
+               footprint="GOST_FP:DIP-16_W7.62mm",
                datasheet="",
                descr="Четырёхканальный аналоговый ключ КР590КН2, DIP-16",
                keywords="ключ коммутатор switch КН2", mfr="", mpn="КР590КН2")
@@ -302,7 +302,7 @@ def sym_kr590kn2():
 
 def sym_lm1117():
     s = Symbol("LM1117MP-ADJ", "DA", "LM1117MP-ADJ",
-               footprint="Package_TO_SOT_SMD:SOT-223-3_TabPin2",
+               footprint="GOST_FP:SOT-223-3_TabPin2",
                datasheet="https://www.ti.com/lit/ds/symlink/lm1117.pdf",
                descr="Линейный стабилизатор LDO 800 мА, регулируемый 1,25…13,8 В, SOT-223",
                keywords="стабилизатор LDO regulator adjustable", mfr="Texas Instruments",
@@ -315,7 +315,7 @@ def sym_lm1117():
 
 def sym_stm32():
     s = Symbol("STM32F030C8Tx", "DD", "STM32F030C8T6",
-               footprint="Package_QFP:LQFP-48_7x7mm_P0.5mm",
+               footprint="GOST_FP:LQFP-48_7x7mm_P0.5mm",
                datasheet="https://www.st.com/resource/en/datasheet/stm32f030c8.pdf",
                descr="МК ARM Cortex-M0, 64 КБ Flash, 8 КБ RAM, 48 МГц, LQFP-48",
                keywords="МК MCU STM32 Cortex-M0", mfr="STMicroelectronics", mpn="STM32F030C8T6")
@@ -341,7 +341,7 @@ def sym_stm32():
 
 def sym_ft232rl():
     s = Symbol("FT232RL", "DD", "FT232RL",
-               footprint="Package_SO:SSOP-28_5.3x10.2mm_P0.65mm",
+               footprint="GOST_FP:SSOP-28_5.3x10.2mm_P0.65mm",
                datasheet="https://ftdichip.com/wp-content/uploads/2020/08/DS_FT232R.pdf",
                descr="Преобразователь интерфейса USB–UART, SSOP-28",
                keywords="USB UART FTDI преобразователь", mfr="FTDI", mpn="FT232RL-REEL")
@@ -372,7 +372,7 @@ def sym_conn(n, nets=None):
     Наименование цепи — поле экземпляра «Цепь<N>», редактируется в свойствах символа."""
     nets = nets or [""] * n
     s = Symbol(f"Conn_1x{n:02d}", "X", f"Conn_1x{n:02d}",
-               footprint=f"Connector_PinHeader_2.54mm:PinHeader_1x{n:02d}_P2.54mm_Vertical",
+               footprint=f"GOST_FP:PinHeader_1x{n:02d}_P2.54mm_Vertical",
                descr=f"Соединитель {n}-конт., табличная форма по ГОСТ 2.755 "
                      f"(поз. обозначение: XP — вилка, XS — розетка). "
                      f"Цепи задаются в полях Цепь1…Цепь{n}",
@@ -415,7 +415,7 @@ def sym_button():
     """Выключатель кнопочный нажимной с замыкающим контактом (ГОСТ 2.755-87,
     привод — ГОСТ 2.721-74). Выводы в тех же точках, что у штатного Switch:SW_Push
     (±5,08 мм), — замена не рвёт провода. Поз. обозначение по ГОСТ 2.710 — SB."""
-    s = Symbol("SW_Push_NO", "SB", "SW_Push_NO",
+    s = Symbol("SW_Push_NO", "SB", "SW_Push_NO", footprint="GOST_FP:SW_PUSH_6mm",
                descr="Выключатель кнопочный нажимной, замыкающий контакт, самовозврат (ГОСТ 2.755)",
                keywords="кнопка выключатель кнопочный SB push button switch")
     g = s.graphics
@@ -430,8 +430,8 @@ def sym_button():
     # нажимной привод
     g.append(line((-1.905, 5.588), (-1.905, 6.35), (1.905, 6.35), (1.905, 5.588)))
     s.pins += [
-        pin("1", "", "passive", -5.08, 0, 0, length=1.27),
-        pin("2", "", "passive", 5.08, 0, 180, length=1.27),
+        pin("1", "", "passive", -5.08, 0, 0, length=1.27, empty=""),
+        pin("2", "", "passive", 5.08, 0, 180, length=1.27, empty=""),
     ]
     s.hide_pin_numbers = True
     s.hide_pin_names = True

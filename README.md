@@ -1,4 +1,4 @@
-# kicad-gost-lib — УГО и рамка по ЕСКД для KiCad 9/10
+# kicad-gost-lib — УГО, посадочные места и рамка по ЕСКД для KiCad 10
 
 Библиотека подключается к проектам как **git-сабмодуль** в папку `lib/kicad-gost-lib`,
 пути в проектах — только относительные (`${KIPRJMOD}`).
@@ -6,6 +6,7 @@
 ```
 kicad-gost-lib/
 ├── symbols/GOST_UGO.kicad_sym          УГО компонентов (12 шт.)
+├── footprints/GOST_FP.pretty/          посадочные места (19 шт.)
 ├── drawing_sheets/GOST_form1.kicad_wks рамка листа + основная надпись, ГОСТ 2.104 форма 1
 ├── tools/gen_gost_lib.py               генератор УГО (символы описаны кодом)
 ├── tools/gen_wks.py                    генератор рамки
@@ -31,6 +32,15 @@ kicad-gost-lib/
 инверсные выводы — указателем инверсии (кружком), питание отдельной группой, корпус без заливки,
 шаг выводов 2,54 мм. В символах заполнены поля `Footprint`, `Datasheet`, `Manufacturer`,
 `Manufacturer_Part_Number`. У соединителя наименования цепей — поля экземпляра `Цепь1…ЦепьN`.
+
+## Посадочные места `GOST_FP.pretty`
+
+19 посадочных мест, которые использует проект (IPC-7351, взяты из официальной библиотеки KiCad
+и перенесены в библиотеку, чтобы проект не зависел от версии установленных библиотек):
+резисторы DIN0309, конденсаторы C_Disc, подстроечные 3296W, DIP-8/16, LQFP-48, SSOP-28, SOT-223,
+TO-126, TO-220, DO-41, BPW34 (DIL2), светодиоды TO-18, кнопка 6 × 6 мм, вилки PinHeader 1×2…1×6.
+3D-модели — из штатной библиотеки (`${KICAD10_3DMODEL_DIR}`). В символах GOST_UGO поле
+`Footprint` уже ссылается на `GOST_FP:…`.
 
 ## Рамка `GOST_form1.kicad_wks`
 
@@ -58,6 +68,12 @@ git submodule add ../kicad-gost-lib.git lib/kicad-gost-lib
 
 ```
 (lib (name "GOST_UGO")(type "KiCad")(uri "${KIPRJMOD}/lib/kicad-gost-lib/symbols/GOST_UGO.kicad_sym")(options "")(descr "УГО по ЕСКД"))
+```
+
+`fp-lib-table` проекта:
+
+```
+(lib (name "GOST_FP")(type "KiCad")(uri "${KIPRJMOD}/lib/kicad-gost-lib/footprints/GOST_FP.pretty")(options "")(descr "Посадочные места"))
 ```
 
 Рамка: *Файл → Параметры страницы → Файл рамки* —
