@@ -602,6 +602,34 @@ def sym_gnd():
     return s
 
 
+def sym_pwr():
+    """Обозначение цепи питания: вывод со стрелкой и наименованием цепи (Б, В, А …).
+    Имя цепи = значение поля Value. Геометрия — как у power:+12V, замена не рвёт провода."""
+    s = Symbol("PWR", "#PWR", "PWR", descr="Цепь питания: стрелка с наименованием цепи (имя цепи = Value)",
+               keywords="питание power supply", power=True)
+    s.graphics += [line((0, 0), (0, 2.54)), line((-0.762, 1.27), (0, 2.54), (0.762, 1.27))]
+    s.pins.append(pin("1", "", "power_in", 0, 0, 90, hidden=True, length=0))
+    s.ref_at = (0, -3.81, "")
+    s.ref_hidden = True
+    s.val_at = (0, 3.556, "")
+    s.name_offset = 0
+    return s
+
+
+def sym_pwr_flag():
+    """Служебный флаг источника питания для ERC (на печать не влияет, в BOM не входит)."""
+    s = Symbol("PWR_FLAG", "#FLG", "PWR_FLAG", descr="Флаг источника питания для ERC",
+               keywords="power flag", power=True)
+    s.graphics += [line((0, 0), (0, 1.27), (-1.905, 2.54), (0, 3.81), (1.905, 2.54), (0, 1.27))]
+    s.pins.append(pin("1", "pwr", "power_out", 0, 0, 90, hidden=True, length=0))
+    s.ref_at = (0, 2.413, "")
+    s.ref_hidden = True
+    s.val_at = (0, 4.572, "")
+    s.value_hidden = True
+    s.name_offset = 0
+    return s
+
+
 def main():
     global ARGS
     ap = argparse.ArgumentParser()
@@ -616,6 +644,7 @@ def main():
     syms = [sym_opa340(), sym_kr590kn2(), sym_lm1117(), sym_stm32(), sym_ft232rl()]
     syms += [sym_conn(n, ["+12 В", "-12 В", "Общий"] if n == 3 else None) for n in range(2, 7)]
     syms.append(sym_gnd())
+    syms += [sym_pwr(), sym_pwr_flag()]
     syms.append(sym_button())
     syms += [sym_r(), sym_r_trim(), sym_c(), sym_led(), sym_photodiode(), sym_zener(), sym_npn()]
 
