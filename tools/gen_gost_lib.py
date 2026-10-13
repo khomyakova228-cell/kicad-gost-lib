@@ -441,19 +441,162 @@ def sym_button():
     return s
 
 
-def sym_gnd():
-    """Заземление, общее обозначение — ГОСТ 2.721-74, табл. 6б, п. 1."""
-    s = Symbol("GND", "#PWR", "GND", descr="Символ питания: общий провод (земля) по ГОСТ 2.721",
-               keywords="земля общий GND ground", power=True)
+# ------------------------------------------------- дискретные элементы (масштаб 1:2 к размерам ГОСТ)
+# Выводы стоят в тех же точках и с теми же номерами, что у штатных символов KiCad
+# (Device:R, Device:C, Device:R_Potentiometer, Device:LED, Diode:ZYxxx, Sensor_Optical:BPW34,
+# Transistor_BJT:BD235, power:GND) — замена символа на схеме не рвёт провода.
+THICK = 0.508
+
+
+def wline(w, *pts):
+    p = " ".join(f"(xy {fmt(x)} {fmt(y)})" for x, y in pts)
+    return f"(polyline (pts {p}) (stroke (width {fmt(w)}) (type default)) (fill (type none)))"
+
+
+def fpoly(*pts):
+    p = " ".join(f"(xy {fmt(x)} {fmt(y)})" for x, y in pts + (pts[0],))
+    return f"(polyline (pts {p}) (stroke (width 0.1) (type default)) (fill (type outline)))"
+
+
+def arrow(sx, sy, ex, ey, head=0.75, half=0.3):
+    """линия со сплошной стрелкой на конце (ex, ey)"""
+    L = math.hypot(ex - sx, ey - sy)
+    ux, uy = (ex - sx) / L, (ey - sy) / L
+    nx, ny = -uy, ux
+    bx, by = ex - head * ux, ey - head * uy
+    return [line((sx, sy), (bx, by)),
+            fpoly((ex, ey), (bx + half * nx, by + half * ny), (bx - half * nx, by - half * ny))]
+
+
+def two_pin(s, x1, y1, a1, x2, y2, a2, length, n1="", n2=""):
+    s.pins.append(pin("1", n1, "passive", x1, y1, a1, length=length, empty=""))
+    s.pins.append(pin("2", n2, "passive", x2, y2, a2, length=length, empty=""))
+    s.hide_pin_numbers = True
+    s.hide_pin_names = True
+
+
+def diode_body(g, x_apex, x_base, half=1.27, k_end=None, a_end=None):
+    """треугольник 60° (вершина — катод) и черта катода"""
+    g.append(line((x_base, half), (x_base, -half), (x_apex, 0), (x_base, half)))
+    g.append(line((x_apex, half), (x_apex, -half)))
+    if k_end is not None:
+        g.append(line((k_end, 0), (x_apex, 0)))
+    if a_end is not None:
+        g.append(line((x_base, 0), (a_end, 0)))
+
+
+def sym_r():
+    """Резистор постоянный, ГОСТ 2.728 (10 × 4 мм -> 5,08 × 2,03)."""
+    s = Symbol("R", "R", "R", footprint="GOST_FP:R_Axial_DIN0309_L9.0mm_D3.2mm_P2.54mm_Vertical",
+               descr="Резистор постоянный (ГОСТ 2.728)", keywords="резистор resistor")
+    s.graphics.append(rect(-1.016, 2.54, 1.016, -2.54))
+    two_pin(s, 0, 3.81, 270, 0, -3.81, 90, 1.27)
+    s.ref_at, s.val_at = (2.54, 1.27, "left"), (2.54, -1.27, "left")
+    return s
+
+
+def sym_r_trim():
+    """Резистор подстроечный, ГОСТ 2.728: регулирующий элемент — отрезок с «Т» на конце."""
+    s = Symbol("R_Trim", "R", "R_Trim", footprint="GOST_FP:Potentiometer_Bourns_3296W_Vertical",
+               descr="Резистор подстроечный (ГОСТ 2.728)", keywords="резистор подстроечный trimmer")
     g = s.graphics
-    g.append(line((0, 0), (0, -2.54)))
-    g.append(line((-2.54, -2.54), (2.54, -2.54)))
-    g.append(line((-1.524, -3.556), (1.524, -3.556)))
-    g.append(line((-0.508, -4.572), (0.508, -4.572)))
+    g.append(rect(-1.016, 2.54, 1.016, -2.54))
+    g.append(line((2.54, 0), (1.27, 0)))
+    g.append(wline(LINE_W, (1.27, 0.762), (1.27, -0.762)))
+    s.pins += [pin("1", "1", "passive", 0, 3.81, 270, length=1.27),
+               pin("2", "2", "passive", 3.81, 0, 180, length=1.27),
+               pin("3", "3", "passive", 0, -3.81, 90, length=1.27)]
+    s.hide_pin_numbers = True
+    s.hide_pin_names = True
+    s.ref_at, s.val_at = (-2.54, 1.27, "right"), (-2.54, -1.27, "right")
+    return s
+
+
+def sym_c():
+    """Конденсатор постоянной ёмкости, ГОСТ 2.728 (пластины 8 мм, зазор 1,5 мм -> 4,06 / 0,76)."""
+    s = Symbol("C", "C", "C", footprint="GOST_FP:C_Disc_D5.1mm_W3.2mm_P5.00mm",
+               descr="Конденсатор постоянной ёмкости (ГОСТ 2.728)", keywords="конденсатор capacitor")
+    s.graphics += [wline(THICK, (-2.032, 0.381), (2.032, 0.381)),
+                   wline(THICK, (-2.032, -0.381), (2.032, -0.381))]
+    two_pin(s, 0, 3.81, 270, 0, -3.81, 90, 3.429)
+    s.ref_at, s.val_at = (2.54, 1.27, "left"), (2.54, -1.27, "left")
+    return s
+
+
+def sym_led():
+    """Светодиод, ГОСТ 2.730: диод в корпусе Ø10 (-> Ø5,08), две стрелки наружу под 45°."""
+    s = Symbol("LED", "HL", "LED", descr="Светодиод (ГОСТ 2.730)", keywords="светодиод LED",
+               footprint="GOST_FP:LaserDiode_TO18-D5.6-3")
+    g = s.graphics
+    g.append(circle(0, 0, 2.54))
+    diode_body(g, -1.1, 1.1, k_end=-1.27, a_end=1.27)
+    d = (0.7071, 0.7071)
+    for sx, sy in ((-0.508, 1.778), (0.889, 1.397)):
+        g += arrow(sx, sy, sx + 2.8 * d[0], sy + 2.8 * d[1])
+    two_pin(s, -3.81, 0, 0, 3.81, 0, 180, 2.54, "K", "A")
+    s.ref_at, s.val_at = (0, -3.81, ""), (0, -5.588, "")
+    return s
+
+
+def sym_photodiode():
+    """Фотодиод, ГОСТ 2.730: диод в корпусе Ø10 (-> Ø5,08), две стрелки внутрь под 45°."""
+    s = Symbol("Photodiode", "VD", "Photodiode", descr="Фотодиод (ГОСТ 2.730)",
+               keywords="фотодиод photodiode PIN", footprint="GOST_FP:Osram_DIL2_4.3x4.65mm_P5.08mm")
+    g = s.graphics
+    g.append(circle(-1.27, 0, 2.54))
+    diode_body(g, -2.2, 0, k_end=-2.54)
+    for ex, ey in ((-1.651, 1.905), (-0.254, 1.651)):
+        g += arrow(ex + 2.0, ey + 2.0, ex, ey)
+    two_pin(s, -5.08, 0, 0, 2.54, 0, 180, 2.54, "K", "A")
+    s.ref_at, s.val_at = (-1.27, -3.81, ""), (-1.27, -5.588, "")
+    return s
+
+
+def sym_zener():
+    """Стабилитрон, ГОСТ 2.730: диод, черта катода с одним отгибом."""
+    s = Symbol("D_Zener", "VD", "D_Zener", descr="Стабилитрон (ГОСТ 2.730)",
+               keywords="стабилитрон zener", footprint="GOST_FP:D_DO-41_SOD81_P10.16mm_Horizontal")
+    g = s.graphics
+    diode_body(g, -1.1, 1.1, k_end=-1.27, a_end=1.27)
+    g.append(line((-1.1, 1.27), (-0.35, 1.27)))
+    two_pin(s, -3.81, 0, 0, 3.81, 0, 180, 2.54, "K", "A")
+    s.ref_at, s.val_at = (0, 2.54, ""), (0, -2.54, "")
+    return s
+
+
+def sym_npn():
+    """Транзистор биполярный n-p-n, ГОСТ 2.730: корпус Ø12 (-> Ø6), угол между К и Э 60°."""
+    s = Symbol("Q_NPN", "VT", "Q_NPN", descr="Транзистор n-p-n (ГОСТ 2.730); выводы 1-Э, 2-К, 3-Б",
+               keywords="транзистор npn BJT", footprint="GOST_FP:TO-126-3_Vertical")
+    g = s.graphics
+    g.append(circle(1.27, 0, 3.0))
+    g.append(wline(THICK, (0, 2.25), (0, -2.25)))       # база
+    g.append(line((-2.54, 0), (0, 0)))
+    g.append(line((0, 1.074), (2.54, 2.54)))            # коллектор
+    ux, uy = 0.866, -0.5                                 # эмиттер, 30° к оси
+    tip = (0 + 2.2 * ux, -1.074 + 2.2 * uy)
+    g.append(line((0, -1.074), (2.54, -2.54)))
+    g.append(fpoly(tip, (tip[0] - 0.8 * ux + 0.3 * 0.5, tip[1] - 0.8 * uy + 0.3 * 0.866),
+                   (tip[0] - 0.8 * ux - 0.3 * 0.5, tip[1] - 0.8 * uy - 0.3 * 0.866)))
+    s.pins += [pin("1", "E", "passive", 2.54, -5.08, 90, length=2.54),
+               pin("2", "C", "passive", 2.54, 5.08, 270, length=2.54),
+               pin("3", "B", "input", -5.08, 0, 0, length=2.54)]
+    s.hide_pin_numbers = True
+    s.hide_pin_names = True
+    s.ref_at, s.val_at = (5.08, 1.27, "left"), (5.08, -1.27, "left")
+    return s
+
+
+def sym_gnd():
+    """Электрическое соединение с корпусом (общий провод) — ГОСТ 2.721-74, табл. 6б, п. 4:
+    «⊥», горизонтальная линия толстая (6 мм -> 3,05 мм)."""
+    s = Symbol("GND", "#PWR", "GND", descr="Общий провод (соединение с корпусом), ГОСТ 2.721",
+               keywords="общий провод корпус GND ground", power=True)
+    s.graphics += [line((0, 0), (0, -1.27)), wline(THICK, (-1.524, -1.27), (1.524, -1.27))]
     s.pins.append(pin("1", "GND", "power_in", 0, 0, 270, hidden=True, length=0))
-    s.ref_at = (0, -6.35, "")
+    s.ref_at = (0, -3.81, "")
     s.ref_hidden = True
-    s.val_at = (0, -7.0, "")
+    s.val_at = (0, -2.54, "")
     s.value_hidden = True
     s.name_offset = 0
     return s
@@ -474,6 +617,7 @@ def main():
     syms += [sym_conn(n, ["+12 В", "-12 В", "Общий"] if n == 3 else None) for n in range(2, 7)]
     syms.append(sym_gnd())
     syms.append(sym_button())
+    syms += [sym_r(), sym_r_trim(), sym_c(), sym_led(), sym_photodiode(), sym_zener(), sym_npn()]
 
     hdr = ["(kicad_symbol_lib"]
     if ARGS.legacy:
